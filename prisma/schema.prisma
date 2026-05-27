@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Broker {
+  id             String        @id @default(uuid())
+  supabase_uid   String        @unique
+  name           String
+  email          String        @unique
+  phone          String
+  rera_number    String?
+  office_area    String
+  profile_photo  String?
+  created_at     DateTime      @default(now())
+  buyers         Buyer[]
+  properties     Property[]
+  deals          Deal[]
+  follow_ups     FollowUp[]
+  whatsapp_logs  WhatsappLog[]
+}
+
+model Buyer {
+  id                    String      @id @default(uuid())
+  broker_id             String
+  broker                Broker      @relation(fields: [broker_id], references: [id])
+  name                  String
+  phone                 String
+  email                 String?
+  budget_min            Int
+  budget_max            Int
+  preferred_localities  String[]
+  bhk_requirement       String[]
+  floor_preference      String?
+  furnishing_preference String?
+  purpose               Purpose
+  notes                 String?
+  status                BuyerStatus @default(ACTIVE)
+  last_contacted_at     DateTime?
+  created_at            DateTime    @default(now())
+  site_visits           SiteVisit[]
+  deals                 Deal[]
+  follow_ups            FollowUp[]
+}
+
+model Property {
+  id           String         @id @default(uuid())
+  broker_id    String
+  broker       Broker         @relation(fields: [broker_id], references: [id])
+  owner_name   String
+  owner_phone  String
+  locality     String
+  society_name String
+  address      String
+  bhk          String
+  floor        Int
+  total_floors Int
+  area_sqft    Int
+  price        Int
+  property_type PropertyType
+  furnishing   Furnishing
+  parking      Boolean        @default(false)
+  amenities    String[]
+  photos       String[]
+  status       PropertyStatus @default(AVAILABLE)
+  listed_at    DateTime       @default(now())
+  created_at   DateTime       @default(now())
+  site_visits  SiteVisit[]
+  deals        Deal[]
+  follow_ups   FollowUp[]
+}
+
+model SiteVisit {
+  id             String      @id @default(uuid())
+  buyer_id       String
+  buyer          Buyer       @relation(fields: [buyer_id], references: [id])
+  property_id    String
+  property       Property    @relation(fields: [property_id], references: [id])
+  broker_id      String
+  scheduled_at   DateTime
+  status         VisitStatus @default(SCHEDULED)
+  buyer_feedback String?
+  broker_notes   String?
+  created_at     DateTime    @default(now())
+}
+
+model Deal {
+  id                  String         @id @default(uuid())
+  buyer_id            String
+  buyer               Buyer          @relation(fields: [buyer_id], references: [id])
+  property_id         String
+  property            Property       @relation(fields: [property_id], references: [id])
+  broker_id           String
+  broker              Broker         @relation(fields: [broker_id], references: [id])
+  stage               DealStage      @default(INQUIRY)
+  expected_close_date DateTime?
+  commission_amount   Int?
+  notes               String?
+  created_at          DateTime       @default(now())
+  updated_at          DateTime       @updatedAt
+  documents           Document[]
+  stage_history       StageHistory[]
+}
+
+model Document {
+  id            String   @id @default(uuid())
+  deal_id       String
+  deal          Deal     @relation(fields: [deal_id], references: [id])
+  document_name String
+  required_from DocOwner
+  is_received   Boolean  @default(false)
+  received_at   DateTime?
+}
+
+model StageHistory {
+  id       String    @id @default(uuid())
+  deal_id  String
+  deal     Deal      @relation(fields: [deal_id], references: [id])
+  stage    DealStage
+  moved_at DateTime  @default(now())
+  note     String?
+}
+
+model FollowUp {
+  id          String       @id @default(uuid())
+  broker_id   String
+  broker      Broker       @relation(fields: [broker_id], references: [id])
+  buyer_id    String?
+  buyer       Buyer?       @relation(fields: [buyer_id], references: [id])
+  property_id String?
+  property    Property?    @relation(fields: [property_id], references: [id])
+  due_at      DateTime
+  type        FollowUpType
+  note        String?
+  is_done     Boolean      @default(false)
+  created_at  DateTime     @default(now())
+}
+
+model WhatsappLog {
+  id              String      @id @default(uuid())
+  broker_id       String
+  broker          Broker      @relation(fields: [broker_id], references: [id])
+  recipient_phone String
+  recipient_name  String
+  message_type    MessageType
+  message_body    String
+  sent_at         DateTime    @default(now())
+}
+
+enum Purpose        { SELF_USE INVESTMENT RENTAL }
+enum BuyerStatus    { ACTIVE CLOSED ON_HOLD }
+enum PropertyType   { SALE RENT }
+enum Furnishing     { FURNISHED SEMI UNFURNISHED }
+enum PropertyStatus { AVAILABLE RENTED SOLD ON_HOLD }
+enum VisitStatus    { SCHEDULED COMPLETED CANCELLED }
+enum DealStage      { INQUIRY SITE_VISIT NEGOTIATION AGREEMENT REGISTERED CLOSED_LOST }
+enum DocOwner       { BUYER SELLER SOCIETY }
+enum FollowUpType   { CALL WHATSAPP SITE_VISIT }
+enum MessageType    { BUYER_FOLLOWUP OWNER_REPORT DEAL_UPDATE REMINDER }

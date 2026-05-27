@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-followups",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/stale-deals",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/owner-reports",
+      "schedule": "0 11 * * 1"
+    }
+  ]
+}
