@@ -1,5 +1,4 @@
-import { cn, formatCurrency, getScoreColor } from '@/lib/utils';
-import { getScoreColor as scoreColor } from '@/lib/matching';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Building2, User } from 'lucide-react';
 import Link from 'next/link';
 

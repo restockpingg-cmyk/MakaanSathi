@@ -15,8 +15,7 @@ export async function GET(request: Request) {
 
   const deals = await prisma.deal.findMany({
     where: {
-      stage: { not: 'CLOSED_LOST' },
-      stage: { not: 'REGISTERED' },
+      stage: { notIn: ['CLOSED_LOST', 'REGISTERED'] },
       updated_at: { lt: tenDaysAgo },
     },
     select: { id: true, broker_id: true, stage: true, updated_at: true },
