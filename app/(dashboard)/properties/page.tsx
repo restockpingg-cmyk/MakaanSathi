@@ -177,7 +177,7 @@ export default function PropertiesPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Edit Property' : 'Add New Property'} size="xl">
         <form onSubmit={handleSave} className="space-y-4">
           {error && <p className="text-red-600 text-sm">{error}</p>}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name *</label>
               <input className={inputCls} required value={form.owner_name} onChange={(e) => set('owner_name', e.target.value)} />
@@ -197,7 +197,7 @@ export default function PropertiesPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Society Name *</label>
               <input className={inputCls} required value={form.society_name} onChange={(e) => set('society_name', e.target.value)} />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
               <input className={inputCls} required value={form.address} onChange={(e) => set('address', e.target.value)} />
             </div>
@@ -251,7 +251,7 @@ export default function PropertiesPage() {
               <input type="checkbox" id="parking" checked={form.parking} onChange={(e) => set('parking', e.target.checked)} className="h-4 w-4 accent-primary-500" />
               <label htmlFor="parking" className="text-sm font-medium text-gray-700">Parking Available</label>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
               <div className="flex gap-2 flex-wrap">
                 {AMENITY_OPTIONS.map((a) => (
@@ -262,7 +262,7 @@ export default function PropertiesPage() {
                 ))}
               </div>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-1 sm:col-span-2">
               <PhotoUploader
                 photos={form.photos}
                 onChange={(urls) => setForm((f) => ({ ...f, photos: urls }))}

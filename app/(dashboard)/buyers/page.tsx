@@ -177,16 +177,16 @@ export default function BuyersPage() {
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Edit Buyer' : 'Add New Buyer'} size="lg">
         <form onSubmit={handleSave} className="space-y-4">
           {error && <p className="text-red-600 text-sm">{error}</p>}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 sm:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <input className={inputCls} required value={form.name} onChange={(e) => set('name', e.target.value)} />
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
               <input className={inputCls} required value={form.phone} onChange={(e) => set('phone', e.target.value)} />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input type="email" className={inputCls} value={form.email} onChange={(e) => set('email', e.target.value)} />
             </div>
@@ -198,7 +198,7 @@ export default function BuyersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Budget Max (₹) *</label>
               <input type="number" className={inputCls} required value={form.budget_max} onChange={(e) => set('budget_max', e.target.value)} placeholder="10000000" />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">BHK Required *</label>
               <div className="flex gap-2 flex-wrap">
                 {BHK_OPTIONS.map((b) => (
@@ -209,7 +209,7 @@ export default function BuyersPage() {
                 ))}
               </div>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Localities *</label>
               <div className="flex gap-2 flex-wrap max-h-28 overflow-y-auto">
                 {MUMBAI_LOCALITIES.map((l) => (
@@ -254,7 +254,7 @@ export default function BuyersPage() {
                 <option value="High">High (16+)</option>
               </select>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
               <textarea className={inputCls} rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
             </div>

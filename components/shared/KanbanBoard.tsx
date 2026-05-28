@@ -177,8 +177,10 @@ export function KanbanBoard({ deals: propDeals }: { deals: KanbanDeal[] }) {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-6">
+        {/* Swipe hint — mobile only */}
+        <p className="text-xs text-gray-400 text-center sm:hidden mb-1">← Swipe to see all stages →</p>
         {/* Active pipeline — horizontal scroll */}
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {ACTIVE_DEAL_STAGES.map((stage) => {
             const extra = stage === 'NEGOTIATION' ? legacyDeals : [];
             return (

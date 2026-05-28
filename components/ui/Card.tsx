@@ -50,14 +50,14 @@ export function StatCard({
   };
   return (
     <Card>
-      <CardContent className="flex items-center gap-4">
-        <div className={cn('p-3 rounded-lg', colors[color])}>
-          <Icon className="h-5 w-5" />
+      <CardContent className="flex items-center gap-3 p-3 sm:p-4">
+        <div className={cn('p-2 sm:p-3 rounded-lg flex-shrink-0', colors[color])}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-gray-500 truncate">{label}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {trend && <p className="text-xs text-gray-500 mt-0.5">{trend}</p>}
+          <p className="text-xs sm:text-sm text-gray-500 truncate">{label}</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{value}</p>
+          {trend && <p className="text-xs text-gray-500 mt-0.5 truncate">{trend}</p>}
         </div>
       </CardContent>
     </Card>
