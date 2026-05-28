@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
@@ -15,7 +16,7 @@ export async function GET() {
   return NextResponse.json(logs);
 }
 
-// POST just logs the message — actual sending happens via wa.me link on the client
+// POST just logs the message â€” actual sending happens via wa.me link on the client
 export async function POST(request: Request) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

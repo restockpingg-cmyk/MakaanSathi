@@ -1,52 +1,52 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET() {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const property = await prisma.property.findFirst({
-    where: { id: params.id, broker_id: broker.id },
-    include: {
-      site_visits: { include: { buyer: true }, orderBy: { scheduled_at: 'desc' } },
-      deals: { include: { buyer: true }, orderBy: { created_at: 'desc' } },
-    },
+  const properties = await prisma.property.findMany({
+    where: { broker_id: broker.id },
+    orderBy: { created_at: 'desc' },
   });
 
-  if (!property) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(property);
+  return NextResponse.json(properties);
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  try {
+    const body = await request.json();
+    const {
+      owner_name, owner_phone, locality, society_name, address,
+      bhk, floor, total_floors, area_sqft, price,
+      property_type, furnishing, parking, amenities, photos,
+    } = body;
 
-  const allowed = [
-    'owner_name', 'owner_phone', 'locality', 'society_name', 'address',
-    'bhk', 'floor', 'total_floors', 'area_sqft', 'price',
-    'property_type', 'furnishing', 'parking', 'amenities', 'status', 'photos',
-  ];
-  const data: Record<string, unknown> = {};
-  for (const key of allowed) {
-    if (key in body) data[key] = body[key];
+    if (!owner_name || !owner_phone || !locality || !society_name || !address || !bhk || !price) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const property = await prisma.property.create({
+      data: {
+        broker_id: broker.id,
+        owner_name, owner_phone, locality, society_name, address, bhk,
+        floor: Number(floor), total_floors: Number(total_floors),
+        area_sqft: Number(area_sqft), price: Number(price),
+        property_type, furnishing,
+        parking: Boolean(parking),
+        amenities: amenities ?? [],
+        photos: Array.isArray(photos) ? photos : [],
+      },
+    });
+
+    return NextResponse.json(property, { status: 201 });
+  } catch (err) {
+    console.error('Create property error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const result = await prisma.property.updateMany({
-    where: { id: params.id, broker_id: broker.id },
-    data,
-  });
-
-  if (result.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const broker = await getAuthenticatedBroker();
-  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  await prisma.property.deleteMany({ where: { id: params.id, broker_id: broker.id } });
-  return NextResponse.json({ success: true });
 }

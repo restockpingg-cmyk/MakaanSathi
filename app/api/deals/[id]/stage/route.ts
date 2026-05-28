@@ -1,44 +1,69 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function GET() {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { stage, note } = await request.json();
-  if (!stage) return NextResponse.json({ error: 'stage is required' }, { status: 400 });
-
-  const deal = await prisma.deal.findFirst({
-    where: { id: params.id, broker_id: broker.id },
-    include: { buyer: true },
+  const deals = await prisma.deal.findMany({
+    where: { broker_id: broker.id },
+    include: { buyer: true, property: true },
+    orderBy: { updated_at: 'desc' },
   });
-  if (!deal) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  // Update stage + log history
-  await prisma.$transaction([
-    prisma.deal.update({ where: { id: params.id }, data: { stage } }),
-    prisma.stageHistory.create({ data: { deal_id: params.id, stage, note: note ?? null } }),
-  ]);
+  return NextResponse.json(deals);
+}
 
-  // Auto-sync buyer and property status based on new stage
-  if (stage === 'REGISTERED') {
-    // Deal closed won — close buyer, mark property sold/rented
-    const propStatus = deal.buyer.purpose === 'RENTAL' ? 'RENTED' : 'SOLD';
-    await prisma.$transaction([
-      prisma.buyer.update({ where: { id: deal.buyer_id }, data: { status: 'CLOSED' } }),
-      prisma.property.update({ where: { id: deal.property_id }, data: { status: propStatus } }),
+export async function POST(request: Request) {
+  const broker = await getAuthenticatedBroker();
+  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const body = await request.json();
+    const { buyer_id, property_id, stage, expected_close_date, commission_amount, notes } = body;
+
+    if (!buyer_id || !property_id) {
+      return NextResponse.json({ error: 'buyer_id and property_id are required' }, { status: 400 });
+    }
+
+    // Verify buyer and property belong to this broker
+    const [buyer, property] = await Promise.all([
+      prisma.buyer.findFirst({ where: { id: buyer_id, broker_id: broker.id } }),
+      prisma.property.findFirst({ where: { id: property_id, broker_id: broker.id } }),
     ]);
-  } else if (stage === 'CLOSED_LOST') {
-    // Deal lost — reactivate buyer and put property back on market
-    await prisma.$transaction([
-      prisma.buyer.update({ where: { id: deal.buyer_id }, data: { status: 'ACTIVE' } }),
-      prisma.property.update({ where: { id: deal.property_id }, data: { status: 'AVAILABLE' } }),
-    ]);
-  } else if (stage === 'SITE_VISIT' || stage === 'NEGOTIATION') {
-    // Actively pursuing — hold the property so it does not appear as free
-    await prisma.property.update({ where: { id: deal.property_id }, data: { status: 'ON_HOLD' } });
+    if (!buyer || !property) return NextResponse.json({ error: 'Invalid buyer or property' }, { status: 400 });
+
+    const deal = await prisma.deal.create({
+      data: {
+        broker_id: broker.id,
+        buyer_id, property_id,
+        stage: stage ?? 'INQUIRY',
+        expected_close_date: expected_close_date ? new Date(expected_close_date) : null,
+        commission_amount: commission_amount ? Number(commission_amount) : null,
+        notes: notes ?? null,
+        stage_history: {
+          create: [{ stage: stage ?? 'INQUIRY' }],
+        },
+        // Pre-populate standard document checklist
+        documents: {
+          create: [
+            { document_name: 'Aadhar Card', required_from: 'BUYER' },
+            { document_name: 'PAN Card', required_from: 'BUYER' },
+            { document_name: 'Bank Statement (6 months)', required_from: 'BUYER' },
+            { document_name: 'Property Title Deed', required_from: 'SELLER' },
+            { document_name: 'Electricity Bill', required_from: 'SELLER' },
+            { document_name: 'NOC from Society', required_from: 'SOCIETY' },
+          ],
+        },
+      },
+      include: { buyer: true, property: true },
+    });
+
+    return NextResponse.json(deal, { status: 201 });
+  } catch (err) {
+    console.error('Create deal error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true, stage });
 }

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { subDays } from 'date-fns';
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
         data: {
           deal_id: deal.id,
           stage: deal.stage as any,
-          note: `Auto: stale — stuck in ${deal.stage} since ${deal.updated_at.toLocaleDateString('en-IN')}`,
+          note: `Auto: stale â€” stuck in ${deal.stage} since ${deal.updated_at.toLocaleDateString('en-IN')}`,
         },
       });
       flagged++;

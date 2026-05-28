@@ -1,54 +1,55 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET() {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const buyer = await prisma.buyer.findFirst({
-    where: { id: params.id, broker_id: broker.id },
-    include: {
-      site_visits: { include: { property: true }, orderBy: { scheduled_at: 'desc' } },
-      deals: { include: { property: true }, orderBy: { created_at: 'desc' } },
-      follow_ups: { orderBy: { due_at: 'asc' } },
-    },
+  const buyers = await prisma.buyer.findMany({
+    where: { broker_id: broker.id },
+    orderBy: { created_at: 'desc' },
   });
 
-  if (!buyer) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(buyer);
+  return NextResponse.json(buyers);
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json();
+  try {
+    const body = await request.json();
+    const {
+      name, phone, email, budget_min, budget_max,
+      preferred_localities, bhk_requirement, floor_preference,
+      furnishing_preference, purpose, notes,
+    } = body;
 
-  // Only update allowed fields
-  const allowed = [
-    'name', 'phone', 'email', 'budget_min', 'budget_max',
-    'preferred_localities', 'bhk_requirement', 'floor_preference',
-    'furnishing_preference', 'purpose', 'status', 'notes', 'last_contacted_at',
-  ];
-  const data: Record<string, unknown> = {};
-  for (const key of allowed) {
-    if (key in body) data[key] = body[key];
+    if (!name || !phone || !budget_min || !budget_max || !preferred_localities?.length || !bhk_requirement?.length || !purpose) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const buyer = await prisma.buyer.create({
+      data: {
+        broker_id: broker.id,
+        name, phone,
+        email: email || null,
+        budget_min: Number(budget_min),
+        budget_max: Number(budget_max),
+        preferred_localities,
+        bhk_requirement,
+        floor_preference: floor_preference || null,
+        furnishing_preference: furnishing_preference || null,
+        purpose,
+        notes: notes || null,
+      },
+    });
+
+    return NextResponse.json(buyer, { status: 201 });
+  } catch (err) {
+    console.error('Create buyer error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const result = await prisma.buyer.updateMany({
-    where: { id: params.id, broker_id: broker.id },
-    data,
-  });
-
-  if (result.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const broker = await getAuthenticatedBroker();
-  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  await prisma.buyer.deleteMany({ where: { id: params.id, broker_id: broker.id } });
-  return NextResponse.json({ success: true });
 }

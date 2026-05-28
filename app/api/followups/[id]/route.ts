@@ -1,26 +1,41 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function GET() {
+  const broker = await getAuthenticatedBroker();
+  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const followups = await prisma.followUp.findMany({
+    where: { broker_id: broker.id },
+    include: { buyer: true, property: true },
+    orderBy: { due_at: 'asc' },
+  });
+
+  return NextResponse.json(followups);
+}
+
+export async function POST(request: Request) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
+  const { buyer_id, property_id, due_at, type, note } = body;
 
-  const result = await prisma.followUp.updateMany({
-    where: { id: params.id, broker_id: broker.id },
-    data: body,
+  if (!due_at || !type) {
+    return NextResponse.json({ error: 'due_at and type are required' }, { status: 400 });
+  }
+
+  const followup = await prisma.followUp.create({
+    data: {
+      broker_id: broker.id,
+      buyer_id: buyer_id || null,
+      property_id: property_id || null,
+      due_at: new Date(due_at),
+      type, note: note ?? null,
+    },
   });
 
-  if (result.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const broker = await getAuthenticatedBroker();
-  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  await prisma.followUp.deleteMany({ where: { id: params.id, broker_id: broker.id } });
-  return NextResponse.json({ success: true });
+  return NextResponse.json(followup, { status: 201 });
 }

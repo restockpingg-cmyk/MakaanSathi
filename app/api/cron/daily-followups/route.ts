@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { subDays, addDays } from 'date-fns';
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   const tomorrow = addDays(new Date(), 1);
   let created = 0;
 
-  // 1. Buyers not contacted in 7+ days — create follow-up
+  // 1. Buyers not contacted in 7+ days â€” create follow-up
   const staleBuyers = await prisma.buyer.findMany({
     where: {
       status: 'ACTIVE',
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // 2. Completed visits with no deal after 2 days — create follow-up
+  // 2. Completed visits with no deal after 2 days â€” create follow-up
   const recentVisits = await prisma.siteVisit.findMany({
     where: {
       status: 'COMPLETED',
