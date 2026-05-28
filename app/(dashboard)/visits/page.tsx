@@ -166,34 +166,42 @@ function VisitsPageInner() {
                 {scheduled.map((v) => {
                   const d = new Date(v.scheduled_at);
                   return (
-                    <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-start gap-4">
-                      {/* Date block */}
-                      <div className="bg-primary-50 rounded-xl p-3 text-center min-w-16 flex-shrink-0">
-                        <p className="text-xs text-primary-500 font-medium uppercase">{d.toLocaleDateString('en-IN', { month: 'short' })}</p>
-                        <p className="text-2xl font-black text-primary-700 leading-none">{d.getDate()}</p>
-                        <p className="text-xs text-primary-600 font-semibold mt-1">
-                          {d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </p>
+                    <div key={v.id} className="bg-white border border-gray-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        {/* Date block */}
+                        <div className="bg-primary-50 rounded-xl p-3 text-center min-w-14 sm:min-w-16 flex-shrink-0">
+                          <p className="text-xs text-primary-500 font-medium uppercase">{d.toLocaleDateString('en-IN', { month: 'short' })}</p>
+                          <p className="text-2xl font-black text-primary-700 leading-none">{d.getDate()}</p>
+                          <p className="text-xs text-primary-600 font-semibold mt-1">
+                            {d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          </p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <User className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="font-semibold text-sm text-gray-900">{v.buyer.name}</span>
+                            <span className="text-gray-400 text-xs">{v.buyer.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Building2 className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                            <span className="text-sm text-gray-600">{v.property.society_name} &middot; {v.property.locality}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatDateTime(v.scheduled_at)}</span>
+                          </div>
+                          {v.broker_notes && <p className="text-xs text-gray-500 mt-1.5 italic">{v.broker_notes}</p>}
+                        </div>
+                        {/* Buttons — desktop only (right column) */}
+                        <div className="hidden sm:flex flex-col gap-2 flex-shrink-0">
+                          <Button size="sm" variant="secondary" onClick={() => updateStatus(v.id, 'COMPLETED')}>Completed</Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateStatus(v.id, 'CANCELLED')}>Cancel</Button>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                          <span className="font-semibold text-sm text-gray-900">{v.buyer.name}</span>
-                          <span className="text-gray-400 text-xs">{v.buyer.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Building2 className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                          <span className="text-sm text-gray-600">{v.property.society_name} &middot; {v.property.locality}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatDateTime(v.scheduled_at)}</span>
-                        </div>
-                        {v.broker_notes && <p className="text-xs text-gray-500 mt-1.5 italic">{v.broker_notes}</p>}
-                      </div>
-                      <div className="flex flex-col gap-2 flex-shrink-0">
-                        <Button size="sm" variant="secondary" onClick={() => updateStatus(v.id, 'COMPLETED')}>Completed</Button>
-                        <Button size="sm" variant="ghost" onClick={() => updateStatus(v.id, 'CANCELLED')}>Cancel</Button>
+                      {/* Buttons — mobile only (full-width row below) */}
+                      <div className="flex gap-2 mt-3 sm:hidden">
+                        <Button size="sm" variant="secondary" className="flex-1" onClick={() => updateStatus(v.id, 'COMPLETED')}>Completed</Button>
+                        <Button size="sm" variant="ghost" className="flex-1" onClick={() => updateStatus(v.id, 'CANCELLED')}>Cancel</Button>
                       </div>
                     </div>
                   );
