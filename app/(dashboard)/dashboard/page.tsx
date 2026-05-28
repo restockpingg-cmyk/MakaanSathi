@@ -4,9 +4,9 @@ import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import { StatCard } from '@/components/ui/Card';
 import { Header } from '@/components/shared/Header';
-import { MatchCard } from '@/components/shared/MatchCard';
-import { getTopMatches } from '@/lib/matching';
-import { formatDate, formatRelative, isOverdue, formatCurrency, DEAL_STAGE_LABELS } from '@/lib/utils';
+import { BuyerMatchCard } from '@/components/shared/BuyerMatchCard';
+import { getMatchesByBuyer } from '@/lib/matching';
+import { formatDate, formatDateTime, formatRelative, isOverdue, formatCurrency, DEAL_STAGE_LABELS } from '@/lib/utils';
 import { Users, Building2, HandshakeIcon, IndianRupee, Bell, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
 import { DealStageBadge } from '@/components/ui/Badge';
@@ -47,10 +47,9 @@ export default async function DashboardPage() {
   const overdueFollowUps = followUps.filter((f) => isOverdue(f.due_at));
   const upcomingVisits = visits.slice(0, 5);
 
-  const topMatches = getTopMatches(
+  const buyerMatches = getMatchesByBuyer(
     buyers.filter((b) => b.status === 'ACTIVE'),
     properties.filter((p) => p.status === 'AVAILABLE'),
-    6
   );
 
   return (
@@ -91,16 +90,21 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-gray-900">Top Buyer–Property Matches</h2>
-            <span className="text-xs text-gray-500">{topMatches.length} matches</span>
+            <span className="text-xs text-gray-500">{buyerMatches.length} buyer{buyerMatches.length !== 1 ? 's' : ''} with matches</span>
           </div>
-          {topMatches.length === 0 ? (
+          {buyerMatches.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
               Add buyers and properties to see matches
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {topMatches.map((m, i) => (
-                <MatchCard key={i} buyer={m.buyer} property={m.property} score={m.score} breakdown={m.breakdown} />
+              {buyerMatches.map((bm) => (
+                <BuyerMatchCard
+                  key={bm.buyer.id}
+                  buyer={bm.buyer}
+                  matches={bm.matches}
+                  topScore={bm.topScore}
+                />
               ))}
             </div>
           )}
@@ -119,7 +123,7 @@ export default async function DashboardPage() {
                 <div key={v.id} className="px-4 py-3">
                   <p className="text-sm font-medium text-gray-900">{v.buyer.name}</p>
                   <p className="text-xs text-gray-500">{v.property.society_name} · {v.property.locality}</p>
-                  <p className="text-xs text-primary-600 mt-0.5">{formatDate(v.scheduled_at)}</p>
+                  <p className="text-xs text-primary-600 mt-0.5 font-medium">{formatDateTime(v.scheduled_at)}</p>
                 </div>
               ))}
             </div>

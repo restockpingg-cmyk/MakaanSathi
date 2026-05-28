@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register');
@@ -35,24 +35,18 @@ export async function middleware(request: NextRequest) {
   const isCronRoute = pathname.startsWith('/api/cron');
   const isApiRoute = pathname.startsWith('/api/');
 
-  // Cron routes validated by CRON_SECRET header, not session
   if (isCronRoute) return response;
-
-  // Public API routes (register, etc.)
   if (isPublicApi) return response;
 
-  // Redirect unauthenticated users away from protected routes
-  if (!session && !isAuthRoute && !isApiRoute) {
+  if (!user && !isAuthRoute && !isApiRoute) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Redirect authenticated users away from auth pages
-  if (session && isAuthRoute) {
+  if (user && isAuthRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Return 401 for unauthenticated API requests (except auth routes handled above)
-  if (!session && isApiRoute) {
+  if (!user && isApiRoute) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

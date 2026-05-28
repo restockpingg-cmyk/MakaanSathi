@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 import type { Broker } from '@prisma/client';
 
-// Server-side Supabase client using cookie-based session
 export function createSupabaseServerClient() {
   const cookieStore = cookies();
   return createServerClient(
@@ -19,15 +18,14 @@ export function createSupabaseServerClient() {
   );
 }
 
-// Resolve the current session and return the matching Broker row
 export async function getAuthenticatedBroker(): Promise<Broker | null> {
   try {
     const supabase = createSupabaseServerClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
 
     const broker = await prisma.broker.findUnique({
-      where: { supabase_uid: session.user.id },
+      where: { supabase_uid: user.id },
     });
     return broker;
   } catch {

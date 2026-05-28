@@ -24,12 +24,24 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
-  const buyer = await prisma.buyer.updateMany({
+
+  // Only update allowed fields
+  const allowed = [
+    'name', 'phone', 'email', 'budget_min', 'budget_max',
+    'preferred_localities', 'bhk_requirement', 'floor_preference',
+    'furnishing_preference', 'purpose', 'status', 'notes', 'last_contacted_at',
+  ];
+  const data: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in body) data[key] = body[key];
+  }
+
+  const result = await prisma.buyer.updateMany({
     where: { id: params.id, broker_id: broker.id },
-    data: body,
+    data,
   });
 
-  if (buyer.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (result.count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json({ success: true });
 }
 

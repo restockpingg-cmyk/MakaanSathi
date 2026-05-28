@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: { default: 'BrokerBook', template: '%s | BrokerBook' },
-  description: 'CRM for independent real estate brokers in Mumbai',
+  title: { default: 'Makaan Sathi', template: '%s | Makaan Sathi' },
+  description: 'Real estate CRM by Makaan Sathi',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

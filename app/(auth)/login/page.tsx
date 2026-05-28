@@ -35,7 +35,7 @@ export default function LoginPage() {
     <form onSubmit={handleLogin} className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-        <p className="text-gray-500 text-sm mt-1">Sign in to your BrokerBook account</p>
+        <p className="text-gray-500 text-sm mt-1">Sign in to your Makaan Sathi account</p>
       </div>
 
       {error && (
@@ -80,9 +80,6 @@ export default function LoginPage() {
         </Link>
       </p>
 
-      <p className="text-center text-xs text-gray-400">
-        Demo: demo@brokerbook.in
-      </p>
     </form>
   );
 }

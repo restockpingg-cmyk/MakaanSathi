@@ -64,6 +64,8 @@ export function matchScore(
   return { score: locality + bhk + price + furnishing, breakdown: { locality, bhk, price, furnishing } };
 }
 
+export const MIN_MATCH_SCORE = 30;
+
 export function getTopMatches<
   B extends BuyerInput & { id: string },
   P extends PropertyInput & { id: string }
@@ -74,11 +76,39 @@ export function getTopMatches<
   for (const buyer of buyers) {
     for (const property of availableProps) {
       const { score, breakdown } = matchScore(buyer, property);
-      if (score > 0) results.push({ buyer, property, score, breakdown });
+      if (score >= MIN_MATCH_SCORE) results.push({ buyer, property, score, breakdown });
     }
   }
 
   return results.sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
+export type BuyerWithMatches<B, P> = {
+  buyer: B;
+  matches: MatchResult<B, P>[];
+  topScore: number;
+};
+
+export function getMatchesByBuyer<
+  B extends BuyerInput & { id: string },
+  P extends PropertyInput & { id: string }
+>(buyers: B[], properties: P[], minScore = MIN_MATCH_SCORE, maxBuyers = 8): BuyerWithMatches<B, P>[] {
+  const availableProps = properties.filter((p) => p.status === 'AVAILABLE');
+  const result: BuyerWithMatches<B, P>[] = [];
+
+  for (const buyer of buyers) {
+    const matches: MatchResult<B, P>[] = [];
+    for (const property of availableProps) {
+      const { score, breakdown } = matchScore(buyer, property);
+      if (score >= minScore) matches.push({ buyer, property, score, breakdown });
+    }
+    if (matches.length > 0) {
+      matches.sort((a, b) => b.score - a.score);
+      result.push({ buyer, matches, topScore: matches[0].score });
+    }
+  }
+
+  return result.sort((a, b) => b.topScore - a.topScore).slice(0, maxBuyers);
 }
 
 export function getScoreColor(score: number): string {

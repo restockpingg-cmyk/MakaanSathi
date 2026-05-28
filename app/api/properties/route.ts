@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const {
       owner_name, owner_phone, locality, society_name, address,
       bhk, floor, total_floors, area_sqft, price,
-      property_type, furnishing, parking, amenities,
+      property_type, furnishing, parking, amenities, photos,
     } = body;
 
     if (!owner_name || !owner_phone || !locality || !society_name || !address || !bhk || !price) {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         property_type, furnishing,
         parking: Boolean(parking),
         amenities: amenities ?? [],
-        photos: [],
+        photos: Array.isArray(photos) ? photos : [],
       },
     });
 

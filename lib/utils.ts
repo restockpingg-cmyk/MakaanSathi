@@ -17,6 +17,11 @@ export function formatDate(date: Date | string | null): string {
   return format(new Date(date), 'dd MMM yyyy');
 }
 
+export function formatDateTime(date: Date | string | null): string {
+  if (!date) return '—';
+  return format(new Date(date), 'dd MMM · h:mm a');
+}
+
 export function formatRelative(date: Date | string | null): string {
   if (!date) return '—';
   return formatDistanceToNow(new Date(date), { addSuffix: true });
@@ -37,19 +42,22 @@ export function getInitials(name: string): string {
 }
 
 export const DEAL_STAGE_LABELS: Record<string, string> = {
-  INQUIRY: 'Inquiry',
+  INQUIRY: 'Fresh Lead',
   SITE_VISIT: 'Site Visit',
-  NEGOTIATION: 'Negotiation',
+  NEGOTIATION: 'Negotiating',
   AGREEMENT: 'Agreement',
-  REGISTERED: 'Registered',
-  CLOSED_LOST: 'Closed Lost',
+  REGISTERED: 'Closed Won',
+  CLOSED_LOST: 'Lost',
 };
 
+// Active pipeline stages (excludes terminal states)
+export const ACTIVE_DEAL_STAGES = ['INQUIRY', 'SITE_VISIT', 'NEGOTIATION'] as const;
+
+// Full ordered pipeline for advance logic (no AGREEMENT — skipped in new flow)
 export const DEAL_STAGES = [
   'INQUIRY',
   'SITE_VISIT',
   'NEGOTIATION',
-  'AGREEMENT',
   'REGISTERED',
   'CLOSED_LOST',
 ] as const;

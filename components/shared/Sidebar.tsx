@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Building2, HandshakeIcon, CalendarCheck,
-  Bell, MessageSquare, Settings, LogOut, Menu, X,
+  Bell, MessageSquare, Settings, LogOut, Menu, X, History,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ const NAV = [
   { href: '/deals', label: 'Deals', icon: HandshakeIcon },
   { href: '/visits', label: 'Site Visits', icon: CalendarCheck },
   { href: '/followups', label: 'Follow-ups', icon: Bell },
+  { href: '/history', label: 'History', icon: History },
   { href: '/whatsapp', label: 'WhatsApp', icon: MessageSquare },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -67,11 +69,9 @@ export function Sidebar({ brokerName, brokerEmail }: SidebarProps) {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-60 bg-sidebar min-h-screen fixed left-0 top-0 z-30">
         {/* Logo */}
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-700">
-          <div className="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">B</span>
-          </div>
-          <span className="text-white font-bold text-lg">BrokerBook</span>
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-700">
+          <Image src="/logo.jpg" alt="Makaan Sathi" width={36} height={36} className="rounded-lg flex-shrink-0 object-cover" />
+          <span className="text-white font-bold text-base leading-tight">Makaan Sathi</span>
         </div>
 
         {/* Nav */}
@@ -100,10 +100,8 @@ export function Sidebar({ brokerName, brokerEmail }: SidebarProps) {
         {/* Mobile top bar */}
         <div className="fixed top-0 left-0 right-0 bg-sidebar h-14 flex items-center justify-between px-4 z-40">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">B</span>
-            </div>
-            <span className="text-white font-bold">BrokerBook</span>
+            <Image src="/logo.jpg" alt="Makaan Sathi" width={28} height={28} className="rounded-lg object-cover" />
+            <span className="text-white font-bold">Makaan Sathi</span>
           </div>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-slate-300 p-1">
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

@@ -36,5 +36,8 @@ export async function POST(request: Request) {
     include: { buyer: true, property: true },
   });
 
-  return NextResponse.json(visit, { status: 201 });
+  return NextResponse.json({
+    ...visit,
+    broker: { name: broker.name, phone: broker.phone, rera_number: broker.rera_number, office_area: broker.office_area },
+  }, { status: 201 });
 }

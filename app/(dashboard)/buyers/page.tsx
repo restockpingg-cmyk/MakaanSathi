@@ -7,14 +7,22 @@ import { Modal } from '@/components/ui/Modal';
 import { BuyerStatusBadge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency, formatRelative, MUMBAI_LOCALITIES, BHK_OPTIONS } from '@/lib/utils';
-import { Plus, Phone, Search, User } from 'lucide-react';
+import { Plus, Search, Pencil } from 'lucide-react';
 import Link from 'next/link';
 
 type Buyer = {
   id: string; name: string; phone: string; email: string | null;
   budget_min: number; budget_max: number; preferred_localities: string[];
   bhk_requirement: string[]; purpose: string; status: string;
-  last_contacted_at: string | null; created_at: string;
+  floor_preference: string | null; furnishing_preference: string | null;
+  notes: string | null; last_contacted_at: string | null; created_at: string;
+};
+
+const emptyForm = {
+  name: '', phone: '', email: '', budget_min: '', budget_max: '',
+  preferred_localities: [] as string[], bhk_requirement: [] as string[],
+  floor_preference: '', furnishing_preference: '', purpose: 'SELF_USE',
+  status: 'ACTIVE', notes: '',
 };
 
 export default function BuyersPage() {
@@ -22,19 +30,15 @@ export default function BuyersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    name: '', phone: '', email: '', budget_min: '', budget_max: '',
-    preferred_localities: [] as string[], bhk_requirement: [] as string[],
-    floor_preference: '', furnishing_preference: '', purpose: 'SELF_USE', notes: '',
-  });
+  const [form, setForm] = useState(emptyForm);
 
   async function load() {
     setLoading(true);
     const res = await fetch('/api/buyers');
-    const data = await res.json();
-    setBuyers(data);
+    setBuyers(await res.json());
     setLoading(false);
   }
 
@@ -48,18 +52,51 @@ export default function BuyersPage() {
     }));
   }
 
+  function openAdd() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError('');
+    setShowModal(true);
+  }
+
+  function openEdit(b: Buyer, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingId(b.id);
+    setForm({
+      name: b.name, phone: b.phone, email: b.email ?? '',
+      budget_min: String(b.budget_min), budget_max: String(b.budget_max),
+      preferred_localities: b.preferred_localities,
+      bhk_requirement: b.bhk_requirement,
+      floor_preference: b.floor_preference ?? '',
+      furnishing_preference: b.furnishing_preference ?? '',
+      purpose: b.purpose, status: b.status, notes: b.notes ?? '',
+    });
+    setError('');
+    setShowModal(true);
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError('');
-    const res = await fetch('/api/buyers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, budget_min: Number(form.budget_min), budget_max: Number(form.budget_max) }),
-    });
+
+    const payload = {
+      ...form,
+      budget_min: Number(form.budget_min),
+      budget_max: Number(form.budget_max),
+      email: form.email || null,
+      floor_preference: form.floor_preference || null,
+      furnishing_preference: form.furnishing_preference || null,
+      notes: form.notes || null,
+    };
+
+    const res = editingId
+      ? await fetch(`/api/buyers/${editingId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      : await fetch('/api/buyers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
     if (res.ok) {
       setShowModal(false);
-      setForm({ name: '', phone: '', email: '', budget_min: '', budget_max: '', preferred_localities: [], bhk_requirement: [], floor_preference: '', furnishing_preference: '', purpose: 'SELF_USE', notes: '' });
       load();
     } else {
       const d = await res.json();
@@ -81,17 +118,14 @@ export default function BuyersPage() {
       <Header
         title="Buyers"
         subtitle={`${buyers.length} buyer${buyers.length !== 1 ? 's' : ''} in your CRM`}
-        action={<Button onClick={() => setShowModal(true)}><Plus className="h-4 w-4" /> Add Buyer</Button>}
+        action={<Button onClick={openAdd}><Plus className="h-4 w-4" /> Add Buyer</Button>}
       />
 
-      {/* Search */}
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          value={search} onChange={(e) => setSearch(e.target.value)}
+        <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, phone, or email…"
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
       </div>
 
       {loading ? (
@@ -115,7 +149,16 @@ export default function BuyersPage() {
                       <p className="text-xs text-gray-500">{b.phone}</p>
                     </div>
                   </div>
-                  <BuyerStatusBadge status={b.status} />
+                  <div className="flex items-center gap-1.5">
+                    <BuyerStatusBadge status={b.status} />
+                    <button
+                      onClick={(e) => openEdit(b, e)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                      title="Edit buyer"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1 text-sm text-gray-600">
                   <p>Budget: <span className="font-medium">{formatCurrency(b.budget_min)}–{formatCurrency(b.budget_max)}</span></p>
@@ -131,8 +174,7 @@ export default function BuyersPage() {
         </div>
       )}
 
-      {/* Add Buyer Modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Add New Buyer" size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editingId ? 'Edit Buyer' : 'Add New Buyer'} size="lg">
         <form onSubmit={handleSave} className="space-y-4">
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <div className="grid grid-cols-2 gap-4">
@@ -160,8 +202,7 @@ export default function BuyersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">BHK Required *</label>
               <div className="flex gap-2 flex-wrap">
                 {BHK_OPTIONS.map((b) => (
-                  <button key={b} type="button"
-                    onClick={() => toggleArr('bhk_requirement', b)}
+                  <button key={b} type="button" onClick={() => toggleArr('bhk_requirement', b)}
                     className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${form.bhk_requirement.includes(b) ? 'bg-primary-500 text-white border-primary-500' : 'border-gray-300 text-gray-600 hover:border-primary-300'}`}>
                     {b}
                   </button>
@@ -172,8 +213,7 @@ export default function BuyersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Localities *</label>
               <div className="flex gap-2 flex-wrap max-h-28 overflow-y-auto">
                 {MUMBAI_LOCALITIES.map((l) => (
-                  <button key={l} type="button"
-                    onClick={() => toggleArr('preferred_localities', l)}
+                  <button key={l} type="button" onClick={() => toggleArr('preferred_localities', l)}
                     className={`px-2.5 py-1 rounded-lg text-xs border transition-colors ${form.preferred_localities.includes(l) ? 'bg-primary-500 text-white border-primary-500' : 'border-gray-300 text-gray-600 hover:border-primary-300'}`}>
                     {l}
                   </button>
@@ -189,12 +229,29 @@ export default function BuyersPage() {
               </select>
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select className={inputCls} value={form.status} onChange={(e) => set('status', e.target.value)}>
+                <option value="ACTIVE">Active</option>
+                <option value="ON_HOLD">On Hold</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Furnishing Preference</label>
               <select className={inputCls} value={form.furnishing_preference} onChange={(e) => set('furnishing_preference', e.target.value)}>
                 <option value="">Any</option>
                 <option value="FURNISHED">Furnished</option>
                 <option value="SEMI">Semi-Furnished</option>
                 <option value="UNFURNISHED">Unfurnished</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Floor Preference</label>
+              <select className={inputCls} value={form.floor_preference} onChange={(e) => set('floor_preference', e.target.value)}>
+                <option value="">Any</option>
+                <option value="Low">Low (1–5)</option>
+                <option value="Mid">Mid (6–15)</option>
+                <option value="High">High (16+)</option>
               </select>
             </div>
             <div className="col-span-2">
@@ -204,7 +261,7 @@ export default function BuyersPage() {
           </div>
           <div className="flex gap-3 justify-end pt-2">
             <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button type="submit" loading={saving}>Save Buyer</Button>
+            <Button type="submit" loading={saving}>{editingId ? 'Save Changes' : 'Save Buyer'}</Button>
           </div>
         </form>
       </Modal>

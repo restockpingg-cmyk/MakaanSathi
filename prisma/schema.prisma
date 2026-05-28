@@ -49,30 +49,30 @@ model Buyer {
 }
 
 model Property {
-  id           String         @id @default(uuid())
-  broker_id    String
-  broker       Broker         @relation(fields: [broker_id], references: [id])
-  owner_name   String
-  owner_phone  String
-  locality     String
-  society_name String
-  address      String
-  bhk          String
-  floor        Int
-  total_floors Int
-  area_sqft    Int
-  price        Int
+  id            String         @id @default(uuid())
+  broker_id     String
+  broker        Broker         @relation(fields: [broker_id], references: [id])
+  owner_name    String
+  owner_phone   String
+  locality      String
+  society_name  String
+  address       String
+  bhk           String
+  floor         Int
+  total_floors  Int
+  area_sqft     Int
+  price         Int
   property_type PropertyType
-  furnishing   Furnishing
-  parking      Boolean        @default(false)
-  amenities    String[]
-  photos       String[]
-  status       PropertyStatus @default(AVAILABLE)
-  listed_at    DateTime       @default(now())
-  created_at   DateTime       @default(now())
-  site_visits  SiteVisit[]
-  deals        Deal[]
-  follow_ups   FollowUp[]
+  furnishing    Furnishing
+  parking       Boolean        @default(false)
+  amenities     String[]
+  photos        String[]
+  status        PropertyStatus @default(AVAILABLE)
+  listed_at     DateTime       @default(now())
+  created_at    DateTime       @default(now())
+  site_visits   SiteVisit[]
+  deals         Deal[]
+  follow_ups    FollowUp[]
 }
 
 model SiteVisit {
@@ -108,12 +108,12 @@ model Deal {
 }
 
 model Document {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   deal_id       String
-  deal          Deal     @relation(fields: [deal_id], references: [id])
+  deal          Deal      @relation(fields: [deal_id], references: [id])
   document_name String
   required_from DocOwner
-  is_received   Boolean  @default(false)
+  is_received   Boolean   @default(false)
   received_at   DateTime?
 }
 
@@ -152,13 +152,66 @@ model WhatsappLog {
   sent_at         DateTime    @default(now())
 }
 
-enum Purpose        { SELF_USE INVESTMENT RENTAL }
-enum BuyerStatus    { ACTIVE CLOSED ON_HOLD }
-enum PropertyType   { SALE RENT }
-enum Furnishing     { FURNISHED SEMI UNFURNISHED }
-enum PropertyStatus { AVAILABLE RENTED SOLD ON_HOLD }
-enum VisitStatus    { SCHEDULED COMPLETED CANCELLED }
-enum DealStage      { INQUIRY SITE_VISIT NEGOTIATION AGREEMENT REGISTERED CLOSED_LOST }
-enum DocOwner       { BUYER SELLER SOCIETY }
-enum FollowUpType   { CALL WHATSAPP SITE_VISIT }
-enum MessageType    { BUYER_FOLLOWUP OWNER_REPORT DEAL_UPDATE REMINDER }
+enum Purpose {
+  SELF_USE
+  INVESTMENT
+  RENTAL
+}
+
+enum BuyerStatus {
+  ACTIVE
+  CLOSED
+  ON_HOLD
+}
+
+enum PropertyType {
+  SALE
+  RENT
+}
+
+enum Furnishing {
+  FURNISHED
+  SEMI
+  UNFURNISHED
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RENTED
+  SOLD
+  ON_HOLD
+}
+
+enum VisitStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum DealStage {
+  INQUIRY
+  SITE_VISIT
+  NEGOTIATION
+  AGREEMENT
+  REGISTERED
+  CLOSED_LOST
+}
+
+enum DocOwner {
+  BUYER
+  SELLER
+  SOCIETY
+}
+
+enum FollowUpType {
+  CALL
+  WHATSAPP
+  SITE_VISIT
+}
+
+enum MessageType {
+  BUYER_FOLLOWUP
+  OWNER_REPORT
+  DEAL_UPDATE
+  REMINDER
+}

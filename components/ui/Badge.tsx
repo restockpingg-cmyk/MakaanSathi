@@ -44,8 +44,8 @@ export function DealStageBadge({ stage }: { stage: string }) {
     AGREEMENT: 'warning', REGISTERED: 'success', CLOSED_LOST: 'danger',
   };
   const labels: Record<string, string> = {
-    INQUIRY: 'Inquiry', SITE_VISIT: 'Site Visit', NEGOTIATION: 'Negotiation',
-    AGREEMENT: 'Agreement', REGISTERED: 'Registered', CLOSED_LOST: 'Closed Lost',
+    INQUIRY: 'Fresh Lead', SITE_VISIT: 'Site Visit', NEGOTIATION: 'Negotiating',
+    AGREEMENT: 'Agreement', REGISTERED: 'Closed Won', CLOSED_LOST: 'Lost',
   };
   return <Badge variant={map[stage] ?? 'default'}>{labels[stage] ?? stage}</Badge>;
 }

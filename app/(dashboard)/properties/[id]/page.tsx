@@ -2,12 +2,12 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
-import Image from 'next/image';
 import { Header } from '@/components/shared/Header';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { PropertyStatusBadge, DealStageBadge, VisitStatusBadge } from '@/components/ui/Badge';
 import { formatCurrency, formatDate, formatRelative } from '@/lib/utils';
-import { Building2, BedDouble, Maximize2, Car, Phone, User } from 'lucide-react';
+import { BedDouble, Maximize2, Car, Phone, User } from 'lucide-react';
+import { PhotoGallery } from '@/components/shared/PhotoGallery';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,14 +31,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-4">
-          {/* Photo */}
-          <div className="h-48 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center overflow-hidden relative">
-            {property.photos.length > 0 ? (
-              <Image src={property.photos[0]} alt={property.society_name} fill className="object-cover" sizes="400px" />
-            ) : (
-              <Building2 className="h-16 w-16 text-slate-400" />
-            )}
-          </div>
+          {/* Photo gallery */}
+          <PhotoGallery photos={property.photos} alt={property.society_name} />
 
           {/* Details */}
           <Card>
