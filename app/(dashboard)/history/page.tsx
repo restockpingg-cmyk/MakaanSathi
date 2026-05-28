@@ -145,7 +145,7 @@ export default async function HistoryPage() {
       kind: 'followup' as const,
       date: new Date(f.due_at),
       isDone: f.is_done,
-      note: f.notes ?? '',
+      note: f.note ?? '',
       buyerName: f.buyer?.name ?? 'Unknown',
       followupId: f.id,
     })),
