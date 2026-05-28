@@ -3,39 +3,22 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
-  const broker = await getAuthenticatedBroker();
-  if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const followups = await prisma.followUp.findMany({
-    where: { broker_id: broker.id },
-    include: { buyer: true, property: true },
-    orderBy: { due_at: 'asc' },
-  });
-
-  return NextResponse.json(followups);
-}
-
-export async function POST(request: Request) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
-  const { buyer_id, property_id, due_at, type, note } = body;
+  const { is_done, note, due_at, type } = body;
 
-  if (!due_at || !type) {
-    return NextResponse.json({ error: 'due_at and type are required' }, { status: 400 });
-  }
-
-  const followup = await prisma.followUp.create({
+  await prisma.followUp.updateMany({
+    where: { id: params.id, broker_id: broker.id },
     data: {
-      broker_id: broker.id,
-      buyer_id: buyer_id || null,
-      property_id: property_id || null,
-      due_at: new Date(due_at),
-      type, note: note ?? null,
+      ...(is_done !== undefined && { is_done }),
+      ...(note !== undefined && { note: note || null }),
+      ...(due_at !== undefined && { due_at: new Date(due_at) }),
+      ...(type !== undefined && { type }),
     },
   });
 
-  return NextResponse.json(followup, { status: 201 });
+  return NextResponse.json({ success: true });
 }

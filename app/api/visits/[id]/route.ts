@@ -3,42 +3,34 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const visits = await prisma.siteVisit.findMany({
-    where: { broker_id: broker.id },
+  const visit = await prisma.siteVisit.findFirst({
+    where: { id: params.id, broker_id: broker.id },
     include: { buyer: true, property: true },
-    orderBy: { scheduled_at: 'desc' },
   });
 
-  return NextResponse.json(visits);
+  if (!visit) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(visit);
 }
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
-  const { buyer_id, property_id, scheduled_at, broker_notes } = body;
+  const { status, buyer_feedback, broker_notes } = body;
 
-  if (!buyer_id || !property_id || !scheduled_at) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
-  const visit = await prisma.siteVisit.create({
+  await prisma.siteVisit.updateMany({
+    where: { id: params.id, broker_id: broker.id },
     data: {
-      broker_id: broker.id,
-      buyer_id, property_id,
-      scheduled_at: new Date(scheduled_at),
-      broker_notes: broker_notes ?? null,
+      ...(status !== undefined && { status }),
+      ...(buyer_feedback !== undefined && { buyer_feedback }),
+      ...(broker_notes !== undefined && { broker_notes }),
     },
-    include: { buyer: true, property: true },
   });
 
-  return NextResponse.json({
-    ...visit,
-    broker: { name: broker.name, phone: broker.phone, rera_number: broker.rera_number, office_area: broker.office_area },
-  }, { status: 201 });
+  return NextResponse.json({ success: true });
 }

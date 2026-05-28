@@ -3,53 +3,46 @@ import { NextResponse } from 'next/server';
 import { getAuthenticatedBroker } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const buyers = await prisma.buyer.findMany({
-    where: { broker_id: broker.id },
-    orderBy: { created_at: 'desc' },
+  const buyer = await prisma.buyer.findFirst({
+    where: { id: params.id, broker_id: broker.id },
   });
 
-  return NextResponse.json(buyers);
+  if (!buyer) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(buyer);
 }
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const broker = await getAuthenticatedBroker();
   if (!broker) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  try {
-    const body = await request.json();
-    const {
-      name, phone, email, budget_min, budget_max,
-      preferred_localities, bhk_requirement, floor_preference,
-      furnishing_preference, purpose, notes,
-    } = body;
+  const body = await request.json();
+  const {
+    name, phone, email, budget_min, budget_max,
+    preferred_localities, bhk_requirement, floor_preference,
+    furnishing_preference, purpose, status, notes,
+  } = body;
 
-    if (!name || !phone || !budget_min || !budget_max || !preferred_localities?.length || !bhk_requirement?.length || !purpose) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+  const buyer = await prisma.buyer.updateMany({
+    where: { id: params.id, broker_id: broker.id },
+    data: {
+      ...(name !== undefined && { name }),
+      ...(phone !== undefined && { phone }),
+      ...(email !== undefined && { email: email || null }),
+      ...(budget_min !== undefined && { budget_min: Number(budget_min) }),
+      ...(budget_max !== undefined && { budget_max: Number(budget_max) }),
+      ...(preferred_localities !== undefined && { preferred_localities }),
+      ...(bhk_requirement !== undefined && { bhk_requirement }),
+      ...(floor_preference !== undefined && { floor_preference: floor_preference || null }),
+      ...(furnishing_preference !== undefined && { furnishing_preference: furnishing_preference || null }),
+      ...(purpose !== undefined && { purpose }),
+      ...(status !== undefined && { status }),
+      ...(notes !== undefined && { notes: notes || null }),
+    },
+  });
 
-    const buyer = await prisma.buyer.create({
-      data: {
-        broker_id: broker.id,
-        name, phone,
-        email: email || null,
-        budget_min: Number(budget_min),
-        budget_max: Number(budget_max),
-        preferred_localities,
-        bhk_requirement,
-        floor_preference: floor_preference || null,
-        furnishing_preference: furnishing_preference || null,
-        purpose,
-        notes: notes || null,
-      },
-    });
-
-    return NextResponse.json(buyer, { status: 201 });
-  } catch (err) {
-    console.error('Create buyer error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return NextResponse.json({ success: true });
 }
